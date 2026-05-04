@@ -23,6 +23,7 @@ set_source_files_properties(${VX_APP_ICON_MACOS} PROPERTIES
 
 # Translations
 set(VX_TS_FILES data/core/translations/vnote_zh_CN.ts
+    data/core/translations/vnote_es_ES.ts
     data/core/translations/vnote_ja.ts)
 # Generate .qm files from .ts files (lrelease)
 set_source_files_properties(${VX_TS_FILES} PROPERTIES
