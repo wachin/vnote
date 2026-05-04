@@ -14,11 +14,11 @@ Spanish translation of VNote in this fork:
 - [x] Verify that no translations remain marked as `unfinished`.
 - [x] Verify that Qt placeholders (`%1`, `%2`, `%n`) are preserved.
 - [x] Verify that `lrelease` generates the `.qm` file correctly.
-- [ ] Manually review the translation in Qt Linguist to fix style, accents,
+- [x] Manually review the translation in Qt Linguist to fix style, accents,
       context, and interface strings that are too long.
-- [ ] Add `es_ES` to the packaging flow when building AppImages or final
+- [x] Add `es_ES` to the packaging flow when building AppImages or final
       installers. `src/Packaging.cmake` currently contains:
-      `--translations zh_CN,ja`.
+      `--translations zh_CN,es_ES,ja`.
 - [ ] Test a built VNote binary with the interface in Spanish.
 - [ ] Open a pull request from `wachin/vnote` to `vnotex/vnote`.
 
@@ -196,4 +196,3 @@ Final checklist:
   git add src/CMakeLists.txt src/data/core/translations/vnote_es_ES.ts Roadmap.md
   git commit -m "Add Spanish translation"
   ```
-
