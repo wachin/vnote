@@ -1,52 +1,52 @@
-# Roadmap de traduccion al espanol de VNote
+# VNote Spanish Translation Roadmap
 
-Este archivo sirve como lista de seguimiento para terminar, compilar y probar la
-traduccion espanola de VNote en este fork:
+This file tracks the remaining work needed to finish, build, and test the
+Spanish translation of VNote in this fork:
 
-- Proyecto original: <https://github.com/vnotex/vnote>
-- Fork de trabajo: <https://github.com/wachin/vnote>
+- Original project: <https://github.com/vnotex/vnote>
+- Working fork: <https://github.com/wachin/vnote>
 
-## Estado actual
+## Current Status
 
-- [x] Crear el archivo de traduccion `src/data/core/translations/vnote_es_ES.ts`.
-- [x] Agregar `vnote_es_ES.ts` a `VX_TS_FILES` en `src/CMakeLists.txt`.
-- [x] Traducir las cadenas de VNote al espanol.
-- [x] Validar que no queden traducciones marcadas como `unfinished`.
-- [x] Validar que los marcadores de Qt (`%1`, `%2`, `%n`) se conserven.
-- [x] Validar que `lrelease` genere correctamente el archivo `.qm`.
-- [ ] Revisar manualmente la traduccion en Qt Linguist para corregir estilo, acentos,
-      contexto y textos demasiado largos en la interfaz.
-- [ ] Agregar `es_ES` al flujo de empaquetado cuando se quiera generar AppImage
-      o instaladores finales. En `src/Packaging.cmake` actualmente aparece:
+- [x] Create the translation file `src/data/core/translations/vnote_es_ES.ts`.
+- [x] Add `vnote_es_ES.ts` to `VX_TS_FILES` in `src/CMakeLists.txt`.
+- [x] Translate VNote strings into Spanish.
+- [x] Verify that no translations remain marked as `unfinished`.
+- [x] Verify that Qt placeholders (`%1`, `%2`, `%n`) are preserved.
+- [x] Verify that `lrelease` generates the `.qm` file correctly.
+- [ ] Manually review the translation in Qt Linguist to fix style, accents,
+      context, and interface strings that are too long.
+- [ ] Add `es_ES` to the packaging flow when building AppImages or final
+      installers. `src/Packaging.cmake` currently contains:
       `--translations zh_CN,ja`.
-- [ ] Probar VNote compilado con la interfaz en espanol.
-- [ ] Abrir un pull request desde `wachin/vnote` hacia `vnotex/vnote`.
+- [ ] Test a built VNote binary with the interface in Spanish.
+- [ ] Open a pull request from `wachin/vnote` to `vnotex/vnote`.
 
-## Herramientas necesarias
+## Required Tools
 
-Este fork compila con Qt 6. El workflow local de referencia esta en:
+This fork builds with Qt 6. The local reference workflow is:
 
 ```text
 .github/workflows/ci-linux.yml
 ```
 
-Dependencias principales:
+Main dependencies:
 
 - [ ] Git.
-- [ ] CMake 3.20 o superior.
-- [ ] Compilador C++17.
-- [ ] Qt 6 con `qtwebengine`, `qtwebchannel`, `qtpositioning`, `qtpdf`,
-      `qtimageformats`, `qt5compat` y herramientas Linguist.
-- [ ] Qt Creator o Qt Linguist para revisar `vnote_es_ES.ts`.
-- [ ] Paquetes Linux usados por CI: `extra-cmake-modules`, `libxkbcommon-dev`,
+- [ ] CMake 3.20 or newer.
+- [ ] C++17 compiler.
+- [ ] Qt 6 with `qtwebengine`, `qtwebchannel`, `qtpositioning`, `qtpdf`,
+      `qtimageformats`, `qt5compat`, and Linguist tools.
+- [ ] Qt Creator or Qt Linguist to review `vnote_es_ES.ts`.
+- [ ] Linux packages used by CI: `extra-cmake-modules`, `libxkbcommon-dev`,
       `libxcb-cursor-dev`, `libfcitx5-qt-dev`, `fcitx-libs-dev`, `fuse`.
 
-Nota: las instrucciones antiguas de la pagina web usan paquetes Qt5. Para esta
-rama es mejor seguir el CI actual, que instala Qt 6.8.3.
+Note: the older website instructions use Qt5 packages. For this branch, it is
+better to follow the current CI workflow, which installs Qt 6.8.3.
 
-## Inicializar el repositorio
+## Initialize The Repository
 
-Si se clona desde cero:
+When cloning from scratch:
 
 ```bash
 git clone https://github.com/wachin/vnote.git vnote
@@ -54,84 +54,84 @@ cd vnote
 git submodule update --init --recursive
 ```
 
-Si el repositorio ya existe, actualizar submodulos:
+If the repository already exists, update submodules:
 
 ```bash
 git submodule sync --recursive
 git submodule update --init --recursive
 ```
 
-## Editar la traduccion
+## Edit The Translation
 
-Abrir el archivo en Qt Linguist:
+Open the file in Qt Linguist:
 
 ```bash
 linguist src/data/core/translations/vnote_es_ES.ts
 ```
 
-Tambien se puede abrir el proyecto en Qt Creator y editar el archivo `.ts` desde
-la pestana de traducciones.
+You can also open the project in Qt Creator and edit the `.ts` file from the
+translation tools.
 
-Checklist de revision:
+Review checklist:
 
-- [ ] Revisar menus principales.
-- [ ] Revisar dialogs de notas, carpetas y cuadernos.
-- [ ] Revisar busqueda.
-- [ ] Revisar exportacion.
-- [ ] Revisar ViewArea, splits, pestanas y espacios de trabajo.
-- [ ] Revisar mensajes de error y confirmacion.
-- [ ] Revisar plurales (`%n`) en Qt Linguist.
-- [ ] Confirmar que ninguna traduccion rompa placeholders (`%1`, `%2`, `%n`).
+- [ ] Review the main menus.
+- [ ] Review note, folder, and notebook dialogs.
+- [ ] Review search.
+- [ ] Review export.
+- [ ] Review ViewArea, splits, tabs, and workspaces.
+- [ ] Review error and confirmation messages.
+- [ ] Review plurals (`%n`) in Qt Linguist.
+- [ ] Confirm that no translation breaks placeholders (`%1`, `%2`, `%n`).
 
-## Actualizar cadenas fuente
+## Update Source Strings
 
-Cuando cambie el codigo y aparezcan nuevas llamadas a `tr()`, actualizar los
-archivos `.ts` desde el build de CMake:
+When the code changes and new `tr()` calls appear, update the `.ts` files from
+the CMake build:
 
 ```bash
 cmake --build build --target update_translations
 ```
 
-Si ese target no existe en la version local de Qt/CMake, usar el target que CMake
-genere para `lupdate`, o ejecutar manualmente:
+If that target does not exist with the local Qt/CMake version, use the target
+generated by CMake for `lupdate`, or run it manually:
 
 ```bash
 lupdate src -ts src/data/core/translations/vnote_es_ES.ts
 ```
 
-Advertencia: `lupdate src` puede mostrar errores al intentar parsear JavaScript
-moderno/minificado dentro de `src/data/extra/web`. Si el `.ts` se actualiza bien,
-esos mensajes no bloquean la traduccion.
+Warning: `lupdate src` may print errors while parsing modern/minified
+JavaScript files under `src/data/extra/web`. If the `.ts` file updates
+correctly, those messages do not block the translation work.
 
-## Compilar los idiomas
+## Build The Languages
 
-Desde una carpeta `build` configurada con CMake:
+From a `build` directory already configured by CMake:
 
 ```bash
 cmake --build build --target lrelease
 ```
 
-Validacion rapida solo para espanol:
+Quick validation for Spanish only:
 
 ```bash
 lrelease src/data/core/translations/vnote_es_ES.ts -qm /tmp/vnote_es_ES.qm
 ```
 
-Resultado esperado:
+Expected result:
 
 ```text
 Generated 1626 translation(s) (1626 finished and 0 unfinished)
 ```
 
-Los `.qm` generados por CMake quedan normalmente bajo:
+The `.qm` files generated by CMake normally end up under:
 
 ```text
 build/src/translations/
 ```
 
-## Compilar VNote para probarlo
+## Build VNote For Testing
 
-Configurar y compilar:
+Configure and build:
 
 ```bash
 mkdir -p build
@@ -140,41 +140,42 @@ cmake --build build --target vnote
 cmake --build build --target lrelease
 ```
 
-Si se desea construir el paquete usado por el CI:
+To build the package used by CI:
 
 ```bash
 cmake --build build --target pack
 ```
 
-El CI hace pasos adicionales para AppImage, `fcitx-qt5`, `qt6ct`, OpenSSL y
-linuxdeploy. Para probar la traduccion localmente, normalmente basta con compilar
-el binario `vnote` y los `.qm`.
+CI performs additional steps for AppImage, `fcitx-qt5`, `qt6ct`, OpenSSL, and
+linuxdeploy. To test the translation locally, it is usually enough to build the
+`vnote` binary and the `.qm` files.
 
-## Probar la interfaz en espanol
+## Test The Spanish Interface
 
-1. Ejecutar VNote compilado:
+1. Run the built VNote binary:
 
    ```bash
    ./build/src/vnote
    ```
 
-2. Abrir `Settings`.
-3. Ir a `General`.
-4. Cambiar `Language:` a `es_ES` o `Spanish`, segun como aparezca en la lista.
-5. Reiniciar VNote si la aplicacion lo solicita.
-6. Verificar que los menus y dialogos aparezcan en espanol.
+2. Open `Settings`.
+3. Go to `General`.
+4. Change `Language:` to `es_ES` or `Spanish`, depending on how it appears in
+   the list.
+5. Restart VNote if the application asks for it.
+6. Verify that menus and dialogs appear in Spanish.
 
-Si la traduccion no carga:
+If the translation does not load:
 
-- [ ] Confirmar que existe `build/src/translations/vnote_es_ES.qm`.
-- [ ] Confirmar que `vnote_es_ES.ts` esta listado en `src/CMakeLists.txt`.
-- [ ] Confirmar que VNote esta encontrando la carpeta `translations`.
-- [ ] Probar instalando el proyecto o copiando temporalmente `vnote_es_ES.qm`
-      junto a las otras traducciones que use el binario.
+- [ ] Confirm that `build/src/translations/vnote_es_ES.qm` exists.
+- [ ] Confirm that `vnote_es_ES.ts` is listed in `src/CMakeLists.txt`.
+- [ ] Confirm that VNote is finding the `translations` folder.
+- [ ] Try installing the project or temporarily copying `vnote_es_ES.qm` next
+      to the other translations used by the binary.
 
-## Preparar contribucion
+## Prepare The Contribution
 
-Antes de abrir el pull request:
+Before opening the pull request:
 
 ```bash
 git status --short
@@ -182,14 +183,14 @@ git diff -- src/CMakeLists.txt src/data/core/translations/vnote_es_ES.ts Roadmap
 lrelease src/data/core/translations/vnote_es_ES.ts -qm /tmp/vnote_es_ES.qm
 ```
 
-Checklist final:
+Final checklist:
 
-- [ ] La traduccion compila con `lrelease`.
-- [ ] VNote arranca correctamente.
-- [ ] La interfaz se puede cambiar a espanol.
-- [ ] Se revisaron visualmente los dialogos principales.
-- [ ] Se agrego `es_ES` al empaquetado si se va a distribuir un paquete final.
-- [ ] Se creo un commit claro, por ejemplo:
+- [ ] The translation builds with `lrelease`.
+- [ ] VNote starts correctly.
+- [ ] The interface can be switched to Spanish.
+- [ ] The main dialogs were visually reviewed.
+- [ ] `es_ES` was added to packaging if a final package will be distributed.
+- [ ] A clear commit was created, for example:
 
   ```bash
   git add src/CMakeLists.txt src/data/core/translations/vnote_es_ES.ts Roadmap.md
