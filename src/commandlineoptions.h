@@ -23,6 +23,9 @@ public:
 
   // Whether to watch theme folder for changes
   bool m_watchThemes = false;
+
+  // Whether to start a new instance instead of forwarding to the running one.
+  bool m_newInstance = false;
 };
 
 #endif // COMMANDLINEOPTIONS_H

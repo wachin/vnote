@@ -62,6 +62,20 @@ bool SingleInstanceGuard::tryRun() {
   return true;
 }
 
+bool SingleInstanceGuard::tryListenOnly() {
+  Q_ASSERT(!m_online);
+
+  // Additional instances in multi-instance mode: the primary instance
+  // owns the lock file. We only try to own the IPC server, which is free
+  // only if no other instance took it. Without the server, this instance
+  // just cannot receive forwarded files from newer launches.
+  m_server = tryListen();
+  setupServer();
+
+  m_online = true;
+  return !m_server.isNull();
+}
+
 void SingleInstanceGuard::requestOpenFiles(const QStringList &p_files) {
   if (p_files.isEmpty()) {
     return;

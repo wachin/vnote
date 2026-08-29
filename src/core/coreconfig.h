@@ -110,6 +110,9 @@ public:
   bool isCheckForUpdatesOnStartEnabled() const;
   void setCheckForUpdatesOnStartEnabled(bool p_enabled);
 
+  bool isNewInstancesEnabled() const;
+  void setNewInstancesEnabled(bool p_enabled);
+
   int getHistoryMaxCount() const;
 
   bool isPerNotebookHistoryEnabled() const;
@@ -165,6 +168,9 @@ private:
   QStringList m_externalNodeExcludePatterns;
 
   bool m_checkForUpdatesOnStartEnabled = true;
+
+  // Whether multiple instances of VNote are allowed to run at the same time.
+  bool m_newInstancesEnabled = false;
 
   // Max count of the history items for each notebook and session config.
   int m_historyMaxCount = 100;

@@ -31,6 +31,10 @@ CommandLineOptions::ParseResult CommandLineOptions::parse(const QStringList &p_a
                                           QCoreApplication::translate(c_context, "Watch theme folder for changes."));
   parser.addOption(watchThemesOpt);
 
+  const QCommandLineOption newInstanceOpt("new-instance",
+                                          QCoreApplication::translate(c_context, "Start a new instance instead of forwarding to the running one."));
+  parser.addOption(newInstanceOpt);
+
   // WebEngine options.
   // No need to handle them. Just add them to the parser to avoid parse error.
   {
@@ -78,6 +82,10 @@ CommandLineOptions::ParseResult CommandLineOptions::parse(const QStringList &p_a
 
   if (parser.isSet(watchThemesOpt)) {
     m_watchThemes = true;
+  }
+
+  if (parser.isSet(newInstanceOpt)) {
+    m_newInstance = true;
   }
 
   return ParseResult::Ok;

@@ -21,6 +21,12 @@ public:
   // Try to run. Return true on success.
   bool tryRun();
 
+  // For additional instances when multiple instances are allowed: only try
+  // to own the IPC server (for file forwarding), without taking the lock
+  // nor connecting to an existing instance. Return true if the server
+  // was acquired.
+  bool tryListenOnly();
+
   // Server API.
 public:
   // A running instance requests to exit.

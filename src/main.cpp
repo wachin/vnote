@@ -301,8 +301,22 @@ int main(int argc, char *argv[]) {
     }
 
     // Guarding.
+    // Multiple instances (either opted-in via settings or requested via
+    // --new-instance) skip the single-instance guard entirely. They still
+    // start the IPC server if the lock is free, so file forwarding works
+    // whenever only one of them holds the lock.
+    const bool multipleInstancesAllowed =
+        configMgr.getCoreConfig().isNewInstancesEnabled() || cmdOptions.m_newInstance;
     SingleInstanceGuard guard;
-    bool canRun = guard.tryRun();
+    bool canRun = true;
+    if (!multipleInstancesAllowed) {
+      canRun = guard.tryRun();
+    } else if (!guard.tryListenOnly()) {
+      // The very first instance owns the lock; secondary ones run without
+      // the IPC server and simply cannot receive forwarded files.
+      qInfo() << "another instance holds the single-instance lock; "
+                 "running as an additional instance without IPC";
+    }
     if (!canRun) {
       guard.requestOpenFiles(cmdOptions.m_pathsToOpen);
       guard.requestShow();

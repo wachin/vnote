@@ -102,6 +102,19 @@ void GeneralPage::setupUI() {
     connect(m_checkForUpdatesCheckBox, &QCheckBox::stateChanged, this, &GeneralPage::pageIsChanged);
   }
 
+  {
+    const QString label(tr("Allow multiple instances"));
+    m_newInstancesCheckBox = WidgetsFactory::createCheckBox(label, this);
+    m_newInstancesCheckBox->setToolTip(
+        tr("Allow running several instances of VNote at the same time"));
+    cardLayout->addWidget(SettingsPageHelper::createSeparator(this));
+    cardLayout->addWidget(SettingsPageHelper::createCheckBoxRow(
+        m_newInstancesCheckBox, m_newInstancesCheckBox->toolTip(), this));
+    addSearchItem(label, m_newInstancesCheckBox->toolTip(), m_newInstancesCheckBox);
+    connect(m_newInstancesCheckBox, &QCheckBox::stateChanged, this,
+            &GeneralPage::pageIsChangedWithRestartNeeded);
+  }
+
   mainLayout->addStretch();
 }
 
@@ -130,6 +143,8 @@ void GeneralPage::loadInternal() {
       m_services.get<ConfigCoreService>()->isRecoverLastSessionEnabled());
 
   m_checkForUpdatesCheckBox->setChecked(coreConfig.isCheckForUpdatesOnStartEnabled());
+
+  m_newInstancesCheckBox->setChecked(coreConfig.isNewInstancesEnabled());
 }
 
 bool GeneralPage::saveInternal() {
@@ -158,6 +173,8 @@ bool GeneralPage::saveInternal() {
   }
 
   coreConfig.setCheckForUpdatesOnStartEnabled(m_checkForUpdatesCheckBox->isChecked());
+
+  coreConfig.setNewInstancesEnabled(m_newInstancesCheckBox->isChecked());
 
   return true;
 }

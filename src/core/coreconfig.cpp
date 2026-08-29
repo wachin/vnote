@@ -52,6 +52,8 @@ void CoreConfig::fromJson(const QJsonObject &p_jobj) {
 
   m_checkForUpdatesOnStartEnabled = READBOOL(QStringLiteral("checkForUpdatesOnStart"));
 
+  m_newInstancesEnabled = READBOOL(QStringLiteral("newInstancesEnabled"));
+
   m_historyMaxCount = READINT(QStringLiteral("historyMaxCount"));
   if (m_historyMaxCount < 0) {
     m_historyMaxCount = 100;
@@ -81,6 +83,7 @@ QJsonObject CoreConfig::toJson() const {
   obj[QStringLiteral("toolbarIconSize")] = m_toolBarIconSize;
   obj[QStringLiteral("docksTabbarIconSize")] = m_docksTabBarIconSize;
   obj[QStringLiteral("checkForUpdatesOnStart")] = m_checkForUpdatesOnStartEnabled;
+  obj[QStringLiteral("newInstancesEnabled")] = m_newInstancesEnabled;
   obj[QStringLiteral("historyMaxCount")] = m_historyMaxCount;
   obj[QStringLiteral("perNotebookHistory")] = m_perNotebookHistoryEnabled;
   obj[QStringLiteral("lineEnding")] = lineEndingPolicyToString(m_lineEnding);
@@ -163,6 +166,12 @@ bool CoreConfig::isCheckForUpdatesOnStartEnabled() const { return m_checkForUpda
 
 void CoreConfig::setCheckForUpdatesOnStartEnabled(bool p_enabled) {
   updateConfig(m_checkForUpdatesOnStartEnabled, p_enabled, this);
+}
+
+bool CoreConfig::isNewInstancesEnabled() const { return m_newInstancesEnabled; }
+
+void CoreConfig::setNewInstancesEnabled(bool p_enabled) {
+  updateConfig(m_newInstancesEnabled, p_enabled, this);
 }
 
 int CoreConfig::getHistoryMaxCount() const { return m_historyMaxCount; }
