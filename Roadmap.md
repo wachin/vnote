@@ -19,7 +19,8 @@ Spanish translation of VNote in this fork:
 - [x] Add `es_ES` to the packaging flow when building AppImages or final
       installers. `src/Packaging.cmake` currently contains:
       `--translations zh_CN,es_ES,ja`.
-- [ ] Test a built VNote binary with the interface in Spanish.
+- [x] Add `es_ES` to the available interface languages in `src/core/coreconfig.cpp`.
+- [x] Test a built VNote binary with the interface in Spanish.
 - [ ] Open a pull request from `wachin/vnote` to `vnotex/vnote`.
 
 ## Required Tools
@@ -117,6 +118,12 @@ Quick validation for Spanish only:
 lrelease src/data/core/translations/vnote_es_ES.ts -qm /tmp/vnote_es_ES.qm
 ```
 
+To generate the local `.qm` file next to the `.ts` file for manual testing:
+
+```bash
+lrelease src/data/core/translations/vnote_es_ES.ts -qm src/data/core/translations/vnote_es_ES.qm
+```
+
 Expected result:
 
 ```text
@@ -165,6 +172,15 @@ linuxdeploy. To test the translation locally, it is usually enough to build the
 5. Restart VNote if the application asks for it.
 6. Verify that menus and dialogs appear in Spanish.
 
+Local test completed successfully:
+
+- [x] `src/data/core/translations/vnote_es_ES.qm` was generated manually with
+      `lrelease`.
+- [x] VNote was launched with `./build/src/vnote`.
+- [x] `Settings` > `General` showed `español de España (España)`.
+- [x] After selecting Spanish and restarting VNote, the interface appeared in
+      Spanish.
+
 If the translation does not load:
 
 - [ ] Confirm that `build/src/translations/vnote_es_ES.qm` exists.
@@ -179,7 +195,7 @@ Before opening the pull request:
 
 ```bash
 git status --short
-git diff -- src/CMakeLists.txt src/data/core/translations/vnote_es_ES.ts Roadmap.md
+git diff -- src/CMakeLists.txt src/core/coreconfig.cpp src/data/core/translations/vnote_es_ES.ts Roadmap.md
 lrelease src/data/core/translations/vnote_es_ES.ts -qm /tmp/vnote_es_ES.qm
 ```
 
@@ -193,6 +209,6 @@ Final checklist:
 - [ ] A clear commit was created, for example:
 
   ```bash
-  git add src/CMakeLists.txt src/data/core/translations/vnote_es_ES.ts Roadmap.md
+  git add src/CMakeLists.txt src/core/coreconfig.cpp src/data/core/translations/vnote_es_ES.ts Roadmap.md
   git commit -m "Add Spanish translation"
   ```
