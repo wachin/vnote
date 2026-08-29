@@ -9,4 +9,4 @@
 	url = https://github.com/vnotex/vxcore.git
 [submodule "libs/qwindowkit"]
 	path = libs/qwindowkit
-	url = https://github.com/vnotex/qwindowkit
+	url = https://github.com/wachin/qwindowkit
