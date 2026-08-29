@@ -283,6 +283,17 @@ void ConfigMgr2::scheduleMainConfigWrite() {
   m_mainConfigWriteTimer->start();
 }
 
+void ConfigMgr2::flushConfigWrites() {
+  if (m_mainConfigWriteTimer && m_mainConfigWriteTimer->isActive()) {
+    m_mainConfigWriteTimer->stop();
+    doWriteMainConfig();
+  }
+  if (m_sessionConfigWriteTimer && m_sessionConfigWriteTimer->isActive()) {
+    m_sessionConfigWriteTimer->stop();
+    doWriteSessionConfig();
+  }
+}
+
 void ConfigMgr2::scheduleSessionConfigWrite() {
   m_sessionConfigWriteTimer->start();
 }

@@ -110,6 +110,11 @@ public:
   void updateMainConfig(const QJsonObject &p_jobj) override;
   void updateSessionConfig(const QJsonObject &p_jobj) override;
 
+  // Write pending config changes to disk immediately (bypassing the
+  // debounced timers). Called before a restart so changes are not lost
+  // when the process exits before the timer fires.
+  void flushConfigWrites();
+
 private slots:
   // Debounced write handlers (called after timer expires)
   void doWriteMainConfig();

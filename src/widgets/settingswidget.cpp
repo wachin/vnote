@@ -431,6 +431,9 @@ void SettingsWidget::navigateTo(const QStringList &p_pathSegments, const QString
 void SettingsWidget::checkRestart() {
   forEachPage([this](const SettingsPage *p_page) {
     if (p_page->isRestartNeeded()) {
+      // Persist settings now: the debounced write (500ms) may not have
+      // fired yet, and a restart would exit before it does.
+      m_services.get<ConfigMgr2>()->flushConfigWrites();
       int ret = MessageBoxHelper::questionYesNo(
           MessageBoxHelper::Type::Information,
           tr("A restart of VNote may be needed to make changes take effect. Restart VNote now?"),
