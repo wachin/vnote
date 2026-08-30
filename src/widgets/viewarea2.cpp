@@ -28,6 +28,7 @@
 #include "viewsplit2.h"
 #include "viewwindow2.h"
 #include "widgetviewwindow2.h"
+#include "controllers/workspacewrapper.h"
 
 using namespace vnotex;
 
@@ -1381,4 +1382,117 @@ void ViewArea2::updateScreenVisibility() {
   if (m_stackedLayout->currentIndex() != targetPage) {
     m_stackedLayout->setCurrentIndex(targetPage);
   }
+}
+
+// Drag and drop support.
+void ViewArea2::dragEnterEvent(QDragEnterEvent *p_event) {
+  // Accept the drag event if it contains URLs (files)
+  if (p_event->mimeData()->hasUrls()) {
+    p_event->acceptProposedAction();
+  } else {
+    p_event->ignore();
+  }
+}
+
+void ViewArea2::dropEvent(QDropEvent *p_event) {
+  // Handle dropped files
+  if (!p_event->mimeData()->hasUrls()) {
+    p_event->ignore();
+    return;
+  }
+
+  const QList<QUrl> urls = p_event->mimeData()->urls();
+  if (urls.isEmpty()) {
+    p_event->ignore();
+    return;
+  }
+
+  // Get the controller to open files properly
+  auto *controller = m_controller;
+  if (!controller) {
+    qWarning() << "ViewArea2::dropEvent: Controller not available";
+    p_event->ignore();
+    return;
+  }
+
+  // Get the current workspace
+  QString workspaceId = controller->getCurrentWorkspaceId();
+  bool workspaceWasEmpty = workspaceId.isEmpty();
+  if (workspaceWasEmpty) {
+    // If no current workspace, use the first visible workspace or create one
+    QStringList visibleIds = m_view->getVisibleWorkspaceIds();
+    if (!visibleIds.isEmpty()) {
+      workspaceId = visibleIds.first();
+    } else {
+      // Create a new workspace using the same approach as in openBuffer
+      auto *wsSvc = m_services.get<WorkspaceCoreService>();
+      if (wsSvc) {
+        workspaceId = wsSvc->createWorkspace(controller->generateWorkspaceName());
+        if (!workspaceId.isEmpty()) {
+          // Create and register the WorkspaceWrapper
+          auto *wrapper = new WorkspaceWrapper(workspaceId, controller);
+          wrapper->setVisible(true);
+          controller->m_workspaces.insert(workspaceId, wrapper);
+          
+          // Add the workspace to the view
+          if (m_view) {
+            m_view->addFirstViewSplit(workspaceId);
+          }
+        } else {
+          qWarning() << "ViewArea2::dropEvent: Failed to create workspace";
+          p_event->ignore();
+          return;
+        }
+      } else {
+        qWarning() << "ViewArea2::dropEvent: WorkspaceCoreService not available";
+        p_event->ignore();
+        return;
+      }
+    }
+  }
+
+  if (workspaceId.isEmpty()) {
+    qWarning() << "ViewArea2::dropEvent: Could not determine workspace";
+    p_event->ignore();
+    return;
+  }
+
+  // Process each URL
+  QList<QUrl> localFiles;
+  for (const QUrl &url : urls) {
+    if (url.isLocalFile() && url.isValid()) {
+      localFiles.append(url);
+    }
+  }
+
+  if (localFiles.isEmpty()) {
+    p_event->ignore();
+    return;
+  }
+
+  // Open each file using the controller
+  for (const QUrl &url : localFiles) {
+    QString filePath = url.toLocalFile();
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+      continue;
+    }
+
+    // Open the file using the controller's openBuffer method
+    Buffer2 buffer;
+    auto *bufferSvc = m_services.get<BufferService>();
+    if (bufferSvc) {
+      buffer = bufferSvc->openBuffer(filePath);
+    }
+    
+    if (buffer.isValid()) {
+      FileOpenSettings settings;
+      settings.m_focus = true;  // Focus the newly opened file
+      controller->openBuffer(buffer, settings);
+    }
+  }
+
+  p_event->acceptProposedAction();
+  updateScreenVisibility();
+}
 }

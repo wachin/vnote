@@ -13,6 +13,10 @@
 #include "navigationmode.h"
 #include "viewsplit2.h"
 
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
+
 class QLabel;
 class QSplitter;
 class QStackedLayout;
@@ -43,6 +47,11 @@ public:
   ~ViewArea2() override;
 
   ViewAreaController *getController() const;
+
+protected:
+  // Drag and drop support.
+  void dragEnterEvent(QDragEnterEvent *p_event) override;
+  void dropEvent(QDropEvent *p_event) override;
 
   // ============ Split Factory ============
   ViewSplit2 *createViewSplit(const QString &p_workspaceId);

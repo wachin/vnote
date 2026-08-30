@@ -26,6 +26,9 @@ public:
 
   // Whether to start a new instance instead of forwarding to the running one.
   bool m_newInstance = false;
+
+  // Workspace ID for isolating config and data.
+  QString m_workspaceId;
 };
 
 #endif // COMMANDLINEOPTIONS_H

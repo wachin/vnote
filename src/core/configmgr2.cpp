@@ -37,11 +37,12 @@ const QString ConfigMgr2::c_orgName = QStringLiteral("VNoteX");
 
 const QString ConfigMgr2::c_appName = QStringLiteral("VNote");
 
-ConfigMgr2::ConfigMgr2(ConfigCoreService *p_configService, QObject *p_parent)
+ConfigMgr2::ConfigMgr2(ConfigCoreService *p_configService, const QString &p_workspaceId, QObject *p_parent)
     : QObject(p_parent),
       m_configService(p_configService),
       m_mainConfig(new MainConfig(this)),
-      m_sessionConfig(new SessionConfig(this)) {
+      m_sessionConfig(new SessionConfig(this)),
+      m_workspaceId(p_workspaceId) {
   Q_ASSERT(m_configService != nullptr);
 
   // Create debounced write timers
@@ -55,9 +56,17 @@ ConfigMgr2::ConfigMgr2(ConfigCoreService *p_configService, QObject *p_parent)
   m_sessionConfigWriteTimer->setInterval(kWriteIntervalMs);
   connect(m_sessionConfigWriteTimer, &QTimer::timeout, this, &ConfigMgr2::doWriteSessionConfig);
 
-  // Cache paths
-  m_appDataPath = m_configService->getDataPath(DataLocation::App);
-  m_localDataPath = m_configService->getDataPath(DataLocation::Local);
+  // Cache paths, appending workspace ID if provided
+  QString appDataPath = m_configService->getDataPath(DataLocation::App);
+  QString localDataPath = m_configService->getDataPath(DataLocation::Local);
+  
+  if (!p_workspaceId.isEmpty()) {
+    appDataPath += QDir::separator() + p_workspaceId;
+    localDataPath += QDir::separator() + p_workspaceId;
+  }
+  
+  m_appDataPath = appDataPath;
+  m_localDataPath = localDataPath;
 }
 
 ConfigMgr2::~ConfigMgr2() {
@@ -199,6 +208,12 @@ QString ConfigMgr2::getAppDataPath() const {
 QString ConfigMgr2::getUserConfigPath() const {
   return m_localDataPath;
 }
+
+/**
+ * Get the workspace ID used for path isolation.
+ * @return Workspace ID string, empty if not using workspace isolation.
+ */
+QString ConfigMgr2::getWorkspaceId() const { return m_workspaceId; }
 
 QString ConfigMgr2::getLogFile() const {
   return m_localDataPath + QDir::separator() + QStringLiteral("vnote.log");

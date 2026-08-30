@@ -35,6 +35,11 @@ CommandLineOptions::ParseResult CommandLineOptions::parse(const QStringList &p_a
                                           QCoreApplication::translate(c_context, "Start a new instance instead of forwarding to the running one."));
   parser.addOption(newInstanceOpt);
 
+  const QCommandLineOption workspaceIdOpt("workspace-id",
+                                          QCoreApplication::translate(c_context, "Workspace ID for isolating config and data."),
+                                          QCoreApplication::translate(c_context, "id"));
+  parser.addOption(workspaceIdOpt);
+
   // WebEngine options.
   // No need to handle them. Just add them to the parser to avoid parse error.
   {
@@ -86,6 +91,10 @@ CommandLineOptions::ParseResult CommandLineOptions::parse(const QStringList &p_a
 
   if (parser.isSet(newInstanceOpt)) {
     m_newInstance = true;
+  }
+
+  if (parser.isSet(workspaceIdOpt)) {
+    m_workspaceId = parser.value(workspaceIdOpt);
   }
 
   return ParseResult::Ok;

@@ -11,7 +11,7 @@ class SystemTrayHelper {
 public:
   SystemTrayHelper() = delete;
 
-  static QSystemTrayIcon *setupSystemTray(MainWindow2 *p_win, const ConfigMgr2 *p_configMgr);
+  static QSystemTrayIcon *setupSystemTray(MainWindow2 *p_win, const ConfigMgr2 *p_configMgr, const QString &p_workspaceId = QString());
 };
 } // namespace vnotex
 

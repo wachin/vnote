@@ -856,7 +856,7 @@ void MainWindow2::showMainWindow() {
 }
 
 void MainWindow2::setupSystemTray() {
-  m_trayIcon = SystemTrayHelper::setupSystemTray(this, m_serviceLocator.get<ConfigMgr2>());
+  m_trayIcon = SystemTrayHelper::setupSystemTray(this, m_serviceLocator.get<ConfigMgr2>(), m_serviceLocator.get<ConfigMgr2>()->getWorkspaceId());
   m_trayIcon->show();
 }
 

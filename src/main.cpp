@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     workspaceService.setHookManager(&hookManager);
 
     // Create ConfigMgr2 with ConfigCoreService (from ConfigService wrapper)
-    ConfigMgr2 configMgr(configService.coreService());
+    ConfigMgr2 configMgr(configService.coreService(), cmdOptions.m_workspaceId);
     configMgr.init();
     serviceLocator.registerService<ConfigMgr2>(&configMgr);
     qInfo() << "ConfigMgr2 registered";

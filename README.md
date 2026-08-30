@@ -145,17 +145,24 @@ The list of translation-related commands is documented in
 #### Multiple instances
 
 By default VNote allows only one instance (a second launch forwards the files
-to the running one). This fork adds two opt-in ways to run several instances
+to the running one). This fork adds several ways to run several instances
 (useful on Linux workspaces):
 
 * `Settings → General → Allow multiple instances` — persistent preference,
   takes effect after restart.
 * `vnote --new-instance` — start one additional instance, regardless of the
   setting above.
+* `vnote --workspace-id <id>` — start an instance with a specific workspace
+  ID, which isolates its configuration and data (config, notebooks, etc.)
+  and optionally sets a colored tray icon for visual distinction.
 
-Caveats: instances share the same session/config, so the last one to close
-wins the session state; avoid editing the same note in two instances at the
-same time.
+Drag-and-drop support:
+* Drag markdown files (or other supported file types) from your file explorer
+  onto the VNote tab bar to open them in new tabs.
+
+Caveats: instances share the same session/config by default, so the last one
+to close wins the session state; use `--workspace-id` to isolate instances
+and avoid editing the same note in two instances at the same time.
 
 ## License
 VNote is licensed under [GNU LGPLv3](https://opensource.org/licenses/LGPL-3.0). Code base of VNote could be used freely by VNoteX.

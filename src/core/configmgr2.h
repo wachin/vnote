@@ -42,7 +42,7 @@ public:
 
   // Constructor receives ConfigCoreService via DI (non-owning pointer).
   // ConfigCoreService must remain valid for the lifetime of this manager.
-  explicit ConfigMgr2(ConfigCoreService *p_configService, QObject *p_parent = nullptr);
+  explicit ConfigMgr2(ConfigCoreService *p_configService, const QString &p_workspaceId = QString(), QObject *p_parent = nullptr);
 
   ~ConfigMgr2();
 
@@ -152,6 +152,7 @@ private:
   // Cached paths
   QString m_appDataPath;
   QString m_localDataPath;
+  QString m_workspaceId;
 
   // Application version
   static const QVersionNumber c_version;
