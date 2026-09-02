@@ -1,6 +1,5 @@
 // main2.cpp - New entry point for VNote clean architecture
 // Uses ServiceLocator for dependency injection instead of singletons.
-
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
@@ -29,7 +28,6 @@
 #include <core/services/searchcoreservice.h>
 #include <core/services/searchservice.h>
 #include <core/services/snippetcoreservice.h>
-#include <core/services/tagcoreservice.h>
 #include <core/services/tagservice.h>
 #include <core/services/templateservice.h>
 #include <core/services/vnote3migrationservice.h>
@@ -160,6 +158,32 @@ int main(int argc, char *argv[]) {
   }
   qInfo() << "VxCore context created";
 
+  // Parse command line options early so we can use them in ConfigMgr2
+  CommandLineOptions cmdOptions;
+  auto parseResult = cmdOptions.parse(QCoreApplication::arguments());
+  if (parseResult == CommandLineOptions::Ok) {
+    // Do nothing, continue with normal startup
+  } else if (parseResult == CommandLineOptions::Error) {
+    fprintf(stderr, "%s\n", qPrintable(cmdOptions.m_errorMsg));
+    // Arguments to WebEngineView will be unknown ones. So just let it go.
+    vxcore_context_destroy(context);
+    return 0;
+  } else if (parseResult == CommandLineOptions::VersionRequested) {
+    auto versionStr =
+        QStringLiteral("%1 %2").arg(ConfigMgr2::c_appName, ConfigMgr2::getApplicationVersion());
+    qInfo() << versionStr;
+    vxcore_context_destroy(context);
+    return 0;
+  } else if (parseResult == CommandLineOptions::HelpRequested) {
+    qInfo() << cmdOptions.m_helpText;
+    vxcore_context_destroy(context);
+    return 0;
+  } else {
+    qInfo() << cmdOptions.m_helpText;
+    vxcore_context_destroy(context);
+    return 0;
+  }
+
   int ret = 0;
 
   // Scoped block to ensure proper destruction order:
@@ -272,32 +296,6 @@ int main(int argc, char *argv[]) {
       app.setOrganizationName(ConfigMgr2::c_orgName);
 
       app.setApplicationVersion(ConfigMgr2::getApplicationVersion());
-    }
-
-    CommandLineOptions cmdOptions;
-    switch (cmdOptions.parse(app.arguments())) {
-    case CommandLineOptions::Ok:
-      break;
-
-    case CommandLineOptions::Error:
-      fprintf(stderr, "%s\n", qPrintable(cmdOptions.m_errorMsg));
-      // Arguments to WebEngineView will be unknown ones. So just let it go.
-      break;
-
-    case CommandLineOptions::VersionRequested: {
-      auto versionStr =
-          QStringLiteral("%1 %2").arg(app.applicationName(), app.applicationVersion());
-      qInfo() << versionStr;
-      vxcore_context_destroy(context);
-      return 0;
-    }
-
-    case CommandLineOptions::HelpRequested:
-      Q_FALLTHROUGH();
-    default:
-      qInfo() << cmdOptions.m_helpText;
-      vxcore_context_destroy(context);
-      return 0;
     }
 
     // Guarding.

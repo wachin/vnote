@@ -98,6 +98,9 @@ public:
   // Get document or home path.
   static QString getDocumentOrHomePath();
 
+  // Get workspace ID for isolating config and data.
+  QString getWorkspaceId() const;
+
   // Organization name.
   static const QString c_orgName;
 
