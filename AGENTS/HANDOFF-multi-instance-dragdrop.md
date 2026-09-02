@@ -472,6 +472,10 @@ cd /home/wachin/Dev/VNote-Dev/vnote/build && cmake .. && make vnote -j4
 - [x] P3b-fix: `kickOffPostInit` ahora usa `p_pathsToOpen` llamando `openExternalFiles()` si la lista no está vacía.
 - [x] Refactor: `ViewArea2::openDroppedFiles(const QStringList &)` extraído a método público para reutilización en dropEvent y MainWindow2::openExternalFiles.
 - [x] P4: README ajustado — "tab bar" → "editor/tab area" + aclaración de que los archivos se abren como externos (no se importan a la libreta).
+- [x] P6-es (sesión aislada por workspace): `vxcore_set_app_info` con app name `"VNote/<wsId>"` ANTES de `vxcore_context_create` (`main.cpp`) → `vxsession.json`, `vnotex.json` y `session.json` quedan en `~/.cache/VNote/<wsId>` / `~/.local/share/VNote/<wsId>`. ConfigMgr2 ya no duplica el sufijo. Verificado: `--workspace-id 2` arranca con 0 buffers/0 workspaces (primera vez vacío) y paths `"/home/wachin/.local/share/VNote/2"`.
+- [x] P6-es (guard por workspace): `SingleInstanceGuard` ahora acepta workspaceId → lock `/tmp/vnote_2.lock` y server `vnote_2`. Verificado: instancia 2 reenvía a instancia 1 del MISMO workspace (`socket connected to server "vnote_2"`, op code 2 → `openExternalFiles`).
+- [x] P6-es (traducción): (a) `getLocaleToUse()` respetaba `m_locale`; (b) `add_dependencies(vnote lrelease)` en `src/CMakeLists.txt` (los `.qm` NO se regeneraban en build limpio → UI en inglés); (c) fallback por familia de idioma en `loadTranslators` (sistema `es_EC` → carga `vnote_es_ES.qm`).
+- [x] P6-es (icono numerado): `SystemTrayHelper::makeWorkspaceIcon()` pinta tinte por hash + badge con número del workspace; usado en tray y en `app.setWindowIcon`. Iconos de lanzador `vnote-ws{1,2,3,4}.png` (256px) + `vnote-ws{1,2,3,4}.desktop` (Exec=`build/src/vnote --new-instance --workspace-id N %F`) + reglas de instalación en CMake.
 - [ ] Commit final: `feat(app): fix build of workspace isolation and drag-drop` (estilo del repo).
 
 > Al terminar cada ítem, actualízalo aquí. Si descubres un hecho nuevo (API que no existe,
