@@ -14,7 +14,11 @@ namespace vnotex {
 class SingleInstanceGuard : public QObject {
   Q_OBJECT
 public:
-  SingleInstanceGuard() = default;
+  // @p_workspaceId: optional workspace ID. When non-empty, the lock file and
+  // IPC server name are suffixed (e.g. "vnote_ws1") so that each workspace
+  // instance has its own IPC channel and forwarded files reach the correct
+  // running instance.
+  explicit SingleInstanceGuard(const QString &p_workspaceId = QString());
 
   ~SingleInstanceGuard();
 
@@ -71,6 +75,12 @@ private:
   // Whether succeeded to run.
   bool m_online = false;
 
+  // Workspace ID used to scope the lock file and IPC server name.
+  QString m_workspaceId;
+
+  // Server/connection name, scoped by workspace ID when set.
+  QString m_serverName;
+
   QSharedPointer<QLocalSocket> m_client;
 
   QSharedPointer<QLocalServer> m_server;
@@ -80,8 +90,6 @@ private:
   Command m_command;
 
   QScopedPointer<QLockFile> m_lockFile;
-
-  static const QString c_serverName;
 
   static const QChar c_stringListSeparator;
 };

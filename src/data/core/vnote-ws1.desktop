@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=VNote (Workspace 1)
+Icon=vnote-ws1
+Terminal=false
+Exec=/home/wachin/Dev/VNote-Dev/vnote/build/src/vnote --new-instance --workspace-id 1 %F
+MimeType=text/markdown;
+Categories=Utility;

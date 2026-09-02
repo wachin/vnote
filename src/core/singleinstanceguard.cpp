@@ -12,13 +12,23 @@
 
 using namespace vnotex;
 
-const QString SingleInstanceGuard::c_serverName = "vnote";
-
 const QChar SingleInstanceGuard::c_stringListSeparator = '>';
 
+SingleInstanceGuard::SingleInstanceGuard(const QString &p_workspaceId)
+    : m_workspaceId(p_workspaceId) {
+  m_serverName = QStringLiteral("vnote");
+  if (!m_workspaceId.isEmpty()) {
+    m_serverName += QStringLiteral("_") + m_workspaceId;
+  }
+}
+
 QString SingleInstanceGuard::lockFilePath() const {
+  QString name = QStringLiteral("vnote.lock");
+  if (!m_workspaceId.isEmpty()) {
+    name = QStringLiteral("vnote_%1.lock").arg(m_workspaceId);
+  }
   return QStandardPaths::writableLocation(QStandardPaths::TempLocation) +
-         QStringLiteral("/vnote.lock");
+         QStringLiteral("/") + name;
 }
 
 SingleInstanceGuard::~SingleInstanceGuard() { exit(); }
@@ -121,10 +131,10 @@ void SingleInstanceGuard::exit() {
 
 QSharedPointer<QLocalSocket> SingleInstanceGuard::tryConnect() {
   auto socket = QSharedPointer<QLocalSocket>::create();
-  socket->connectToServer(c_serverName);
+  socket->connectToServer(m_serverName);
   if (socket->waitForConnected(200)) {
     // Connected.
-    qDebug() << "socket connected to server" << c_serverName;
+    qDebug() << "socket connected to server" << m_serverName;
     return socket;
   } else {
     qDebug() << "socket connect timeout";
@@ -134,16 +144,16 @@ QSharedPointer<QLocalSocket> SingleInstanceGuard::tryConnect() {
 
 QSharedPointer<QLocalServer> SingleInstanceGuard::tryListen() {
   auto server = QSharedPointer<QLocalServer>::create();
-  bool ret = server->listen(c_serverName);
+  bool ret = server->listen(m_serverName);
   if (!ret && server->serverError() == QAbstractSocket::AddressInUseError) {
     // On Unix, a previous crash may leave a server running.
     // Clean up and try again.
-    QLocalServer::removeServer(c_serverName);
-    ret = server->listen(c_serverName);
+    QLocalServer::removeServer(m_serverName);
+    ret = server->listen(m_serverName);
   }
 
   if (ret) {
-    qDebug() << "local server listening on" << c_serverName;
+    qDebug() << "local server listening on" << m_serverName;
     return server;
   } else {
     qDebug() << "failed to start local server";

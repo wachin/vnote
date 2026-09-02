@@ -44,6 +44,7 @@
 #include <vxcore/vxcore.h>
 #include <widgets/mainwindow2.h>
 #include <widgets/messageboxhelper.h>
+#include <widgets/systemtrayhelper.h>
 
 #include "application.h"
 #include "commandlineoptions.h"
@@ -95,7 +96,22 @@ void loadTranslators(QApplication &p_app, const ConfigMgr2 &configMgr) {
   }
 
   std::unique_ptr<QTranslator> vnoteTranslator(new QTranslator(&p_app));
-  if (vnoteTranslator->load(locale, "vnote", "_", translationsPath)) {
+  // Try the exact locale first. If it fails (e.g. system es_EC but only
+  // es_ES is available), fall back to the language-family match.
+  if (!vnoteTranslator->load(locale, "vnote", "_", translationsPath)) {
+    const auto avail = CoreConfig::getAvailableLocales();
+    for (const QString &availLocale : avail) {
+      QLocale l(availLocale);
+      if (l.language() == locale.language() && l != locale) {
+        if (vnoteTranslator->load(l, "vnote", "_", translationsPath)) {
+          break;
+        }
+      }
+    }
+  }
+  if (vnoteTranslator->isEmpty()) {
+    qInfo() << "no matching VNote translation found for locale" << locale.name();
+  } else {
     p_app.installTranslator(vnoteTranslator.release());
   }
 
@@ -146,21 +162,10 @@ int main(int argc, char *argv[]) {
     QTextCodec::setCodecForLocale(codec);
   }
 
-  vxcore_set_app_info(ConfigMgr2::c_orgName.toUtf8().constData(),
-                      ConfigMgr2::c_appName.toUtf8().constData());
-
-  // Initialize vxcore context
-  VxCoreContextHandle context = nullptr;
-  VxCoreError err = vxcore_context_create(nullptr, &context);
-  if (err != VXCORE_OK || !context) {
-    qCritical() << "Failed to create vxcore context:" << vxcore_error_message(err);
-    return -1;
-  }
-  qInfo() << "VxCore context created";
-
-  // Parse command line options early so we can use them in ConfigMgr2.
-  // QCoreApplication::arguments() requires an app instance; build the list
-  // from argc/argv so early parsing (needed by ConfigMgr2) actually works.
+  // Parse command line options early (before the vxcore context) so the
+  // workspace ID can be used to isolate vxcore's data paths. Build the list
+  // from argc/argv because QCoreApplication::arguments() requires an app
+  // instance (which does not exist yet).
   QStringList rawArguments;
   for (int i = 0; i < argc; ++i) {
     rawArguments << QString::fromLocal8Bit(argv[i]);
@@ -171,17 +176,34 @@ int main(int argc, char *argv[]) {
     auto versionStr =
         QStringLiteral("%1 %2").arg(ConfigMgr2::c_appName, ConfigMgr2::getApplicationVersion());
     qInfo() << versionStr;
-    vxcore_context_destroy(context);
     return 0;
   } else if (parseResult == CommandLineOptions::HelpRequested) {
     qInfo() << cmdOptions.m_helpText;
-    vxcore_context_destroy(context);
     return 0;
   } else if (parseResult == CommandLineOptions::Error) {
     fprintf(stderr, "%s\n", qPrintable(cmdOptions.m_errorMsg));
     // Arguments to WebEngineView will be unknown ones. So just let it go.
   }
   // Ok (or tolerated Error): continue with normal startup.
+
+  // Isolate vxcore data paths per workspace via the app name. With app name
+  // "VNote/demo" the paths become ~/.cache/VNote/demo and
+  // ~/.local/share/VNote/demo, which isolates vxcore.json, vxsession.json and
+  // all buffers/workspaces. A fresh workspace starts empty (no vxsession.json).
+  QString appName = ConfigMgr2::c_appName;
+  if (!cmdOptions.m_workspaceId.isEmpty()) {
+    appName += QStringLiteral("/") + cmdOptions.m_workspaceId;
+  }
+  vxcore_set_app_info(ConfigMgr2::c_orgName.toUtf8().constData(), appName.toUtf8().constData());
+
+  // Initialize vxcore context
+  VxCoreContextHandle context = nullptr;
+  VxCoreError err = vxcore_context_create(nullptr, &context);
+  if (err != VXCORE_OK || !context) {
+    qCritical() << "Failed to create vxcore context:" << vxcore_error_message(err);
+    return -1;
+  }
+  qInfo() << "VxCore context created";
 
   int ret = 0;
 
@@ -287,9 +309,10 @@ int main(int argc, char *argv[]) {
     QAccessible::installFactory(&FakeAccessible::accessibleFactory);
 
     {
-      const QString iconPath = ":/vnotex/data/core/icons/vnote.ico";
-      // Make sense only on Windows.
-      app.setWindowIcon(QIcon(iconPath));
+      // Window icon. When a workspace ID is used, show the numbered
+      // workspace icon for visual distinction between instances.
+      QIcon windowIcon = SystemTrayHelper::makeWorkspaceIcon(cmdOptions.m_workspaceId);
+      app.setWindowIcon(windowIcon);
 
       app.setApplicationName(ConfigMgr2::c_appName);
       app.setOrganizationName(ConfigMgr2::c_orgName);
@@ -301,10 +324,11 @@ int main(int argc, char *argv[]) {
     // Multiple instances (either opted-in via settings or requested via
     // --new-instance) skip the single-instance guard entirely. They still
     // start the IPC server if the lock is free, so file forwarding works
-    // whenever only one of them holds the lock.
+    // whenever only one of them holds the lock. The guard is scoped per
+    // workspace so forwarded files reach the matching running instance.
     const bool multipleInstancesAllowed =
         configMgr.getCoreConfig().isNewInstancesEnabled() || cmdOptions.m_newInstance;
-    SingleInstanceGuard guard;
+    SingleInstanceGuard guard(cmdOptions.m_workspaceId);
     bool canRun = true;
     if (!multipleInstancesAllowed) {
       canRun = guard.tryRun();

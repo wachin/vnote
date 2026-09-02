@@ -56,17 +56,9 @@ ConfigMgr2::ConfigMgr2(ConfigCoreService *p_configService, const QString &p_work
   m_sessionConfigWriteTimer->setInterval(kWriteIntervalMs);
   connect(m_sessionConfigWriteTimer, &QTimer::timeout, this, &ConfigMgr2::doWriteSessionConfig);
 
-  // Cache paths, appending workspace ID if provided
-  QString appDataPath = m_configService->getDataPath(DataLocation::App);
-  QString localDataPath = m_configService->getDataPath(DataLocation::Local);
-  
-  if (!p_workspaceId.isEmpty()) {
-    appDataPath += QDir::separator() + p_workspaceId;
-    localDataPath += QDir::separator() + p_workspaceId;
-  }
-  
-  m_appDataPath = appDataPath;
-  m_localDataPath = localDataPath;
+  // Cache paths (vxcore already applies workspace suffix via the app name).
+  m_appDataPath = m_configService->getDataPath(DataLocation::App);
+  m_localDataPath = m_configService->getDataPath(DataLocation::Local);
 }
 
 ConfigMgr2::~ConfigMgr2() {

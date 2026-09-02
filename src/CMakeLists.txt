@@ -64,6 +64,10 @@ endif()
 
 add_dependencies(vnote VX_EXTRA_RESOURCE)
 
+# Ensure .qm files are (re)generated whenever vnote is built, otherwise a
+# clean build ships without any translation and the UI falls back to English.
+add_dependencies(vnote lrelease)
+
 set(VX_LIBS_FOLDER ../libs)
 target_include_directories(vnote PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -162,6 +166,14 @@ else()
 
     set(desktop.path applications)
     set(desktop.files data/core/vnote.desktop)
+    set(desktopws1.path applications)
+    set(desktopws1.files data/core/vnote-ws1.desktop)
+    set(desktopws2.path applications)
+    set(desktopws2.files data/core/vnote-ws2.desktop)
+    set(desktopws3.path applications)
+    set(desktopws3.files data/core/vnote-ws3.desktop)
+    set(desktopws4.path applications)
+    set(desktopws4.files data/core/vnote-ws4.desktop)
     set(icon16.path icons/hicolor/16x16/apps)
     set(icon16.files data/core/logo/16x16/vnote.png)
     set(icon32.path icons/hicolor/32x32/apps)
@@ -174,9 +186,19 @@ else()
     set(icon128.files data/core/logo/128x128/vnote.png)
     set(icon256.path icons/hicolor/256x256/apps)
     set(icon256.files data/core/logo/256x256/vnote.png)
+    set(iconws1.path icons/hicolor/256x256/apps)
+    set(iconws1.files data/core/logo/vnote-ws1.png)
+    set(iconws2.path icons/hicolor/256x256/apps)
+    set(iconws2.files data/core/logo/vnote-ws2.png)
+    set(iconws3.path icons/hicolor/256x256/apps)
+    set(iconws3.files data/core/logo/vnote-ws3.png)
+    set(iconws4.path icons/hicolor/256x256/apps)
+    set(iconws4.files data/core/logo/vnote-ws4.png)
     set(iconsvg.path icons/hicolor/scalable/apps)
     set(iconsvg.files data/core/logo/vnote.svg)
-    foreach(item IN ITEMS desktop icon16 icon32 icon48 icon64 icon128 icon256 iconsvg)
+    foreach(item IN ITEMS desktop desktopws1 desktopws2 desktopws3 desktopws4
+                        icon16 icon32 icon48 icon64 icon128 icon256
+                        iconws1 iconws2 iconws3 iconws4 iconsvg)
         install(FILES ${CMAKE_CURRENT_LIST_DIR}/${${item}.files}
             DESTINATION ${CMAKE_INSTALL_DATADIR}/${${item}.path}
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)

@@ -1,6 +1,7 @@
 #include "systemtrayhelper.h"
 
 #include <QApplication>
+#include <QFont>
 #include <QIcon>
 #include <QMenu>
 #include <QPainter>
@@ -15,37 +16,62 @@
 
 using namespace vnotex;
 
-QSystemTrayIcon *SystemTrayHelper::setupSystemTray(MainWindow2 *p_win, const ConfigMgr2 *p_configMgr, const QString &p_workspaceId) {
+QIcon SystemTrayHelper::makeWorkspaceIcon(const QString &p_workspaceId) {
+  QIcon icon;
 #if defined(Q_OS_MACOS)
-  QIcon icon(":/vnotex/data/core/logo/vnote_mono.png");
-  icon.setIsMask(true);
+  icon = QIcon(":/vnotex/data/core/logo/vnote_mono.png");
 #else
-  QIcon icon(":/vnotex/data/core/logo/256x256/vnote.png");
+  icon = QIcon(":/vnotex/data/core/logo/256x256/vnote.png");
 #endif
 
-  // If workspace ID is provided, modify the icon color for visual distinction
-  if (!p_workspaceId.isEmpty()) {
-    // Generate a color based on the workspace ID hash
-    uint hash = qHash(p_workspaceId);
-    // Convert hash to a hue value (0-359)
-    int hue = hash % 360;
-    // Create a color with the hue, full saturation, and medium lightness
-    QColor color = QColor::fromHsv(hue, 255, 200);
-    
-    // Apply the color as a mask or overlay to the icon
-    QPixmap pixmap(icon.pixmap(QSize(64, 64))); // Use a reasonable size
-    QPixmap coloredPixmap(pixmap.size());
-    coloredPixmap.fill(Qt::transparent);
-    
-    QPainter painter(&coloredPixmap);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.drawPixmap(0, 0, pixmap);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-    painter.fillRect(coloredPixmap.rect(), color);
-    painter.end();
-    
-    icon = QIcon(coloredPixmap);
+  if (p_workspaceId.isEmpty()) {
+    return icon;
   }
+
+  // Render the base icon at a fixed size.
+  QPixmap pixmap = icon.pixmap(QSize(64, 64));
+  QPixmap result(pixmap.size());
+  result.fill(Qt::transparent);
+
+  QPainter painter(&result);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.drawPixmap(0, 0, pixmap);
+
+  // Tint by workspace ID hash (hue) with SourceIn composition.
+  const uint hash = qHash(p_workspaceId);
+  const QColor tint = QColor::fromHsv(static_cast<int>(hash % 360), 255, 200);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+  painter.fillRect(result.rect(), tint);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+  // Workspace number badge in the bottom-right corner.
+  bool isInt = false;
+  const int number = p_workspaceId.toInt(&isInt);
+  const QString badgeText = isInt ? QString::number(number) : p_workspaceId.left(2);
+
+  QFont font = painter.font();
+  font.setBold(true);
+  font.setPixelSize(result.height() / 3);
+  painter.setFont(font);
+
+  const QRectF badgeRect(result.width() * 0.5, result.height() * 0.5,
+                         result.width() * 0.5, result.height() * 0.5);
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(200, 30, 30));
+  painter.drawEllipse(badgeRect);
+
+  painter.setPen(Qt::white);
+  painter.drawText(badgeRect, Qt::AlignCenter, badgeText);
+  painter.end();
+
+  return QIcon(result);
+}
+
+QSystemTrayIcon *SystemTrayHelper::setupSystemTray(MainWindow2 *p_win, const ConfigMgr2 *p_configMgr, const QString &p_workspaceId) {
+  QIcon icon = makeWorkspaceIcon(p_workspaceId);
+#if defined(Q_OS_MACOS)
+  icon.setIsMask(true);
+#endif
 
   auto trayIcon = new QSystemTrayIcon(icon, p_win);
   trayIcon->setToolTip(qApp->applicationName());
