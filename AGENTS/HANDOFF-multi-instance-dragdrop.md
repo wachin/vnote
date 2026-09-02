@@ -40,8 +40,10 @@ Además este fork mantiene: build Debian 12/Qt 6.4, traducción es_ES completa (
 PR por divergencia de ramas — ver §6), y una migración a arquitectura limpia (MainWindow2,
 ViewArea2, ViewAreaController, ServiceLocator) que convive con el código legacy (sufijo `2`).
 
-**Punto de partida obligatorio:** `git status` → hay 2 archivos modificados sin commitear
-(`src/core/configmgr2.h`, `src/main.cpp`) que SON parte de la solución (ver §3).
+**Punto de partida obligatorio:** leer este documento completo de arriba a abajo. El estado
+del repo al redactar esto: commit `a82f2a41` (docs: este handoff + fixes de `configmgr2.h` y
+`main.cpp` ya commiteados) sobre el commit incompleto `ea3e91fa`. Working tree puede contener
+`opencode.json` sin trackear — es config del editor del usuario, NO tocarlo.
 
 ---
 
@@ -85,12 +87,15 @@ Diagnóstico obtenido con `-fsyntax-only` usando los flags reales de `compile_co
 | Resto (core_services, vxcore, VTextEdit, etc.) | ✅ | Targets `[ 0%..46%]` ya construidos en `build/`. |
 | Binario final `build/src/vnote` | ❌ no existe | Nunca enlazó. Aparecerá en `build/src/vnote` al completar `make vnote`. |
 
-### Working tree sin commitear (PARTE de la solución — no descartar)
+### Ya commiteado en `a82f2a41` (antes estaba sin commitear — no descartar en un checkout)
 
 ```
-M src/core/configmgr2.h   # +3 líneas: declara getWorkspaceId() (mainwindow2.cpp:859 la necesita)
-M src/main.cpp            # parseo temprano de cmdOptions + pasa m_workspaceId a ConfigMgr2
+src/core/configmgr2.h   # +3 líneas: declara getWorkspaceId() (mainwindow2.cpp:859 la necesita)
+src/main.cpp            # parseo temprano de cmdOptions + pasa m_workspaceId a ConfigMgr2
 ```
+
+> Nota: `main.cpp` YA tiene el if/else que evita el switch roto y pasa `m_workspaceId` a
+> `ConfigMgr2`. Lo que AÚN NO tiene es el fix del bug `QCoreApplication::arguments()` (P2).
 
 ### Errores textuales (para búsqueda rápida tras un rebuild)
 
