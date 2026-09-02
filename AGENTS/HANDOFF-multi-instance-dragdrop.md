@@ -471,6 +471,7 @@ cd /home/wachin/Dev/VNote-Dev/vnote/build && cmake .. && make vnote -j4
 - [x] P3: segunda instancia reenvía archivos a la primera (sí/no): **SÍ** — verificado: instancia 1 (server) recibe `openFilesRequested` (op code 2) → `openExternalFiles` → `openDroppedFiles` → buffer `725021c2-bd15-44e8-a57b-d67a7dd890de` con path `/tmp/test_p3_ipc.md` se abrió en server. `showRequested` (op code 1) también recibido.
 - [x] P3b-fix: `kickOffPostInit` ahora usa `p_pathsToOpen` llamando `openExternalFiles()` si la lista no está vacía.
 - [x] Refactor: `ViewArea2::openDroppedFiles(const QStringList &)` extraído a método público para reutilización en dropEvent y MainWindow2::openExternalFiles.
+- [x] P4: README ajustado — "tab bar" → "editor/tab area" + aclaración de que los archivos se abren como externos (no se importan a la libreta).
 - [ ] Commit final: `feat(app): fix build of workspace isolation and drag-drop` (estilo del repo).
 
 > Al terminar cada ítem, actualízalo aquí. Si descubres un hecho nuevo (API que no existe,

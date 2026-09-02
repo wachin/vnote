@@ -158,7 +158,8 @@ to the running one). This fork adds several ways to run several instances
 
 Drag-and-drop support:
 * Drag markdown files (or other supported file types) from your file explorer
-  onto the VNote tab bar to open them in new tabs.
+  onto the VNote editor/tab area to open them in new tabs. Files are opened as
+  external files (not imported into a notebook).
 
 Caveats: instances share the same session/config by default, so the last one
 to close wins the session state; use `--workspace-id` to isolate instances
