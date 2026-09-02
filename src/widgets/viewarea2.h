@@ -16,6 +16,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QStringList>
 
 class QLabel;
 class QSplitter;
@@ -48,6 +49,16 @@ public:
 
   ViewAreaController *getController() const;
 
+  QJsonObject saveLayout() const;
+  void loadLayoutFromSession(const QJsonObject &p_layout);
+
+  // Get the currently active ViewWindow2 (nullptr if none).
+  ViewWindow2 *getCurrentViewWindow() const;
+
+  // Open external files (dropped or forwarded via IPC) as buffers.
+  // Returns true if at least one file was opened.
+  bool openDroppedFiles(const QStringList &p_paths);
+
 protected:
   // Drag and drop support.
   void dragEnterEvent(QDragEnterEvent *p_event) override;
@@ -73,12 +84,6 @@ protected:
   // ============ Top Widget ============
   QWidget *getTopWidget() const;
   void setTopWidget(QWidget *p_widget);
-
-  QJsonObject saveLayout() const;
-  void loadLayoutFromSession(const QJsonObject &p_layout);
-
-  // Get the currently active ViewWindow2 (nullptr if none).
-  ViewWindow2 *getCurrentViewWindow() const;
 
   // Save workspace/buffer session state to vxcore and call vxcore_shutdown().
   // Called before closing buffers on exit.

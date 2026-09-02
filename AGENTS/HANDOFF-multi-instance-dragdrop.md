@@ -459,13 +459,18 @@ cd /home/wachin/Dev/VNote-Dev/vnote/build && cmake .. && make vnote -j4
 
 ## 7. Bitácora de verificación runtime (rellenar al avanzar)
 
-- [ ] P0: `mainwindow2.cpp` compila (verificado con [B]).
-- [ ] P1: `viewarea2.cpp` compila; binario enlaza ([C]).
-- [ ] P1: `vxcore_buffer_open(ctx, NULL, "/ruta/abs.md")` resultado: ______ (funciona / error ___).
-- [ ] P1: drop sobre barra de pestañas: funciona directo / requirió señal `filesDropped` / no funciona.
-- [ ] P2: `vnote --workspace-id demo` crea rutas con sufijo `demo/` (sí/no).
-- [ ] P2: `vnote archivo.md` abre el archivo tras P3b (sí/no).
-- [ ] P3: segunda instancia reenvía archivos a la primera (sí/no).
+- [x] P0: `mainwindow2.cpp` compila (verificado con [B]).
+- [x] P1: `viewarea2.cpp` compila; binario enlaza ([C]).
+- [x] P1: `vxcore_buffer_open(ctx, NULL, "/ruta/abs.md")` resultado: **funciona** — verificado indirectamente en P3b: buffer `bbb6f468` se abrió con `notebookId=""` + `path="/tmp/test_p3.md"` (log línea 96-98).
+- [ ] P1: drop sobre barra de pestañas: funciona directo / requirió señal `filesDropped` / no funciona. *(requiere test manual GUI)*
+- [x] P1-bonus: build completo reveló `systemtrayhelper.h` sin `#include <QString>` (fixed, incluido en el mismo build).
+- [x] P2: `vnote --workspace-id demo` crea rutas con sufijo `demo/` (sí/no): **SÍ** — confirmado en disco (`~/.local/share/VNote/demo` existe) y en log. Locale impreso: `"es_EC"` con `--new-instance --verbose`.
+- [x] P2: `vnote archivo.md` abre el archivo tras P3b (sí/no): **SÍ** — verificado en P3b (log `/tmp/test_p3.md` abierto).
+- [x] P3: nota: `-v` es el atajo de `--version` en QCommandLineParser; para verbose usar `--verbose` (comando de §5 con `-v` es engañoso, corregido).
+- [x] P3: código implementado, compila, enlaza. Señales `openFilesRequested`/`showRequested`/`openFileRequested` conectadas con lambdas. P3b (CLI paths) verificado: `/tmp/test_p3.md` se abrió vía `openExternalFiles` → `openDroppedFiles`.
+- [x] P3: segunda instancia reenvía archivos a la primera (sí/no): **SÍ** — verificado: instancia 1 (server) recibe `openFilesRequested` (op code 2) → `openExternalFiles` → `openDroppedFiles` → buffer `725021c2-bd15-44e8-a57b-d67a7dd890de` con path `/tmp/test_p3_ipc.md` se abrió en server. `showRequested` (op code 1) también recibido.
+- [x] P3b-fix: `kickOffPostInit` ahora usa `p_pathsToOpen` llamando `openExternalFiles()` si la lista no está vacía.
+- [x] Refactor: `ViewArea2::openDroppedFiles(const QStringList &)` extraído a método público para reutilización en dropEvent y MainWindow2::openExternalFiles.
 - [ ] Commit final: `feat(app): fix build of workspace isolation and drag-drop` (estilo del repo).
 
 > Al terminar cada ítem, actualízalo aquí. Si descubres un hecho nuevo (API que no existe,

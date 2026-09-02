@@ -1,6 +1,8 @@
 #ifndef SYSTEMTRAYHELPER_H
 #define SYSTEMTRAYHELPER_H
 
+#include <QString>
+
 class QSystemTrayIcon;
 
 namespace vnotex {

@@ -1,5 +1,6 @@
 #include "viewarea2.h"
 
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -18,6 +19,7 @@
 #include <core/iviewwindowcontent.h>
 #include <core/servicelocator.h>
 #include <core/services/buffer2.h>
+#include <core/services/bufferservice.h>
 #include <core/services/hookmanager.h>
 #include <core/services/workspacecoreservice.h>
 #include <gui/services/themeservice.h>
@@ -38,6 +40,7 @@ ViewArea2::ViewArea2(ServiceLocator &p_services, QWidget *p_parent)
       m_services(p_services) {
   setContentsMargins(0, 0, 0, 0);
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  setAcceptDrops(true);
 
   m_stackedLayout = new QStackedLayout(this);
   m_stackedLayout->setContentsMargins(0, 0, 0, 0);
@@ -1386,113 +1389,78 @@ void ViewArea2::updateScreenVisibility() {
 
 // Drag and drop support.
 void ViewArea2::dragEnterEvent(QDragEnterEvent *p_event) {
-  // Accept the drag event if it contains URLs (files)
   if (p_event->mimeData()->hasUrls()) {
     p_event->acceptProposedAction();
+  } else {
+    QWidget::dragEnterEvent(p_event);
+  }
+}
+
+void ViewArea2::dropEvent(QDropEvent *p_event) {
+  if (!p_event->mimeData()->hasUrls()) {
+    QWidget::dropEvent(p_event);
+    return;
+  }
+
+  QStringList paths;
+  const auto urls = p_event->mimeData()->urls();
+  for (const QUrl &url : urls) {
+    if (url.isLocalFile()) {
+      paths << url.toLocalFile();
+    }
+  }
+  if (paths.isEmpty()) {
+    p_event->ignore();
+    return;
+  }
+
+  auto *bufferSvc = m_services.get<BufferService>();
+  if (!bufferSvc || !m_controller) {
+    qWarning() << "ViewArea2::dropEvent: services unavailable";
+    p_event->ignore();
+    return;
+  }
+
+  if (openDroppedFiles(paths)) {
+    p_event->acceptProposedAction();
+    updateScreenVisibility();
   } else {
     p_event->ignore();
   }
 }
 
-void ViewArea2::dropEvent(QDropEvent *p_event) {
-  // Handle dropped files
-  if (!p_event->mimeData()->hasUrls()) {
-    p_event->ignore();
-    return;
+bool ViewArea2::openDroppedFiles(const QStringList &p_paths) {
+  auto *bufferSvc = m_services.get<BufferService>();
+  if (!bufferSvc || !m_controller) {
+    qWarning() << "ViewArea2::openDroppedFiles: services unavailable";
+    return false;
   }
 
-  const QList<QUrl> urls = p_event->mimeData()->urls();
-  if (urls.isEmpty()) {
-    p_event->ignore();
-    return;
-  }
-
-  // Get the controller to open files properly
-  auto *controller = m_controller;
-  if (!controller) {
-    qWarning() << "ViewArea2::dropEvent: Controller not available";
-    p_event->ignore();
-    return;
-  }
-
-  // Get the current workspace
-  QString workspaceId = controller->getCurrentWorkspaceId();
-  bool workspaceWasEmpty = workspaceId.isEmpty();
-  if (workspaceWasEmpty) {
-    // If no current workspace, use the first visible workspace or create one
-    QStringList visibleIds = m_view->getVisibleWorkspaceIds();
-    if (!visibleIds.isEmpty()) {
-      workspaceId = visibleIds.first();
-    } else {
-      // Create a new workspace using the same approach as in openBuffer
-      auto *wsSvc = m_services.get<WorkspaceCoreService>();
-      if (wsSvc) {
-        workspaceId = wsSvc->createWorkspace(controller->generateWorkspaceName());
-        if (!workspaceId.isEmpty()) {
-          // Create and register the WorkspaceWrapper
-          auto *wrapper = new WorkspaceWrapper(workspaceId, controller);
-          wrapper->setVisible(true);
-          controller->m_workspaces.insert(workspaceId, wrapper);
-          
-          // Add the workspace to the view
-          if (m_view) {
-            m_view->addFirstViewSplit(workspaceId);
-          }
-        } else {
-          qWarning() << "ViewArea2::dropEvent: Failed to create workspace";
-          p_event->ignore();
-          return;
-        }
-      } else {
-        qWarning() << "ViewArea2::dropEvent: WorkspaceCoreService not available";
-        p_event->ignore();
-        return;
-      }
-    }
-  }
-
-  if (workspaceId.isEmpty()) {
-    qWarning() << "ViewArea2::dropEvent: Could not determine workspace";
-    p_event->ignore();
-    return;
-  }
-
-  // Process each URL
-  QList<QUrl> localFiles;
-  for (const QUrl &url : urls) {
-    if (url.isLocalFile() && url.isValid()) {
-      localFiles.append(url);
-    }
-  }
-
-  if (localFiles.isEmpty()) {
-    p_event->ignore();
-    return;
-  }
-
-  // Open each file using the controller
-  for (const QUrl &url : localFiles) {
-    QString filePath = url.toLocalFile();
-    QFileInfo fileInfo(filePath);
-    if (!fileInfo.exists() || !fileInfo.isFile()) {
+  FileOpenSettings settings;
+  settings.m_focus = true;
+  bool opened = false;
+  for (const QString &path : p_paths) {
+    QFileInfo fi(path);
+    if (!fi.exists() || !fi.isFile()) {
       continue;
     }
-
-    // Open the file using the controller's openBuffer method
-    Buffer2 buffer;
-    auto *bufferSvc = m_services.get<BufferService>();
-    if (bufferSvc) {
-      buffer = bufferSvc->openBuffer(filePath);
-    }
-    
+    // External file: NodeIdentifier with empty notebookId + ABSOLUTE path.
+    // vxcore_buffer_open() accepts NULL notebook_id for external absolute
+    // paths (libs/vxcore/include/vxcore/vxcore.h:486-492), and
+    // BufferCoreService::openBuffer passes nullptr when notebookId is empty
+    // (src/core/services/buffercoreservice.cpp:20-22).
+    NodeIdentifier nodeId;
+    nodeId.relativePath = fi.absoluteFilePath();
+    Buffer2 buffer = bufferSvc->openBuffer(nodeId, settings);
     if (buffer.isValid()) {
-      FileOpenSettings settings;
-      settings.m_focus = true;  // Focus the newly opened file
-      controller->openBuffer(buffer, settings);
+      // The controller already handles "no current workspace -> create one"
+      // (viewareacontroller.cpp:64-90) and dedupes already-open tabs
+      // (viewareacontroller.cpp:97-103). Do NOT replicate that logic here.
+      m_controller->openBuffer(buffer, settings);
+      opened = true;
+    } else {
+      qWarning() << "ViewArea2::openDroppedFiles: failed to open" << path;
     }
   }
-
-  p_event->acceptProposedAction();
-  updateScreenVisibility();
-}
+  return opened;
 }

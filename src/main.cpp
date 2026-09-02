@@ -158,17 +158,16 @@ int main(int argc, char *argv[]) {
   }
   qInfo() << "VxCore context created";
 
-  // Parse command line options early so we can use them in ConfigMgr2
+  // Parse command line options early so we can use them in ConfigMgr2.
+  // QCoreApplication::arguments() requires an app instance; build the list
+  // from argc/argv so early parsing (needed by ConfigMgr2) actually works.
+  QStringList rawArguments;
+  for (int i = 0; i < argc; ++i) {
+    rawArguments << QString::fromLocal8Bit(argv[i]);
+  }
   CommandLineOptions cmdOptions;
-  auto parseResult = cmdOptions.parse(QCoreApplication::arguments());
-  if (parseResult == CommandLineOptions::Ok) {
-    // Do nothing, continue with normal startup
-  } else if (parseResult == CommandLineOptions::Error) {
-    fprintf(stderr, "%s\n", qPrintable(cmdOptions.m_errorMsg));
-    // Arguments to WebEngineView will be unknown ones. So just let it go.
-    vxcore_context_destroy(context);
-    return 0;
-  } else if (parseResult == CommandLineOptions::VersionRequested) {
+  auto parseResult = cmdOptions.parse(rawArguments);
+  if (parseResult == CommandLineOptions::VersionRequested) {
     auto versionStr =
         QStringLiteral("%1 %2").arg(ConfigMgr2::c_appName, ConfigMgr2::getApplicationVersion());
     qInfo() << versionStr;
@@ -178,11 +177,11 @@ int main(int argc, char *argv[]) {
     qInfo() << cmdOptions.m_helpText;
     vxcore_context_destroy(context);
     return 0;
-  } else {
-    qInfo() << cmdOptions.m_helpText;
-    vxcore_context_destroy(context);
-    return 0;
+  } else if (parseResult == CommandLineOptions::Error) {
+    fprintf(stderr, "%s\n", qPrintable(cmdOptions.m_errorMsg));
+    // Arguments to WebEngineView will be unknown ones. So just let it go.
   }
+  // Ok (or tolerated Error): continue with normal startup.
 
   int ret = 0;
 
@@ -363,6 +362,17 @@ int main(int argc, char *argv[]) {
 
     mainWindow.show();
     qInfo() << "MainWindow2 shown";
+
+    // P3: consume IPC requests from secondary instances.
+    QObject::connect(&guard, &SingleInstanceGuard::openFilesRequested, &mainWindow,
+                     &MainWindow2::openExternalFiles);
+    QObject::connect(&guard, &SingleInstanceGuard::showRequested, &mainWindow,
+                     &MainWindow2::showMainWindow);
+
+    // P3: macOS FileOpen events.
+    QObject::connect(&app, &Application::openFileRequested, &mainWindow, [&mainWindow](const QString &p_path) {
+      mainWindow.openExternalFiles(QStringList() << p_path);
+    });
 
     // Let MainWindow show first to decide the screen on which app is running.
     WidgetUtils::calculateScaleFactor(mainWindow.windowHandle()->screen());

@@ -208,7 +208,18 @@ void MainWindow2::kickOffPostInit(const QStringList &p_pathsToOpen) {
       QVariantMap args;
       hookMgr->doAction(HookNames::MainWindowAfterStart, args);
     }
+
+    // P3b: open files passed via CLI once startup has settled.
+    if (!p_pathsToOpen.isEmpty()) {
+      openExternalFiles(p_pathsToOpen);
+    }
   });
+}
+
+void MainWindow2::openExternalFiles(const QStringList &p_paths) {
+  if (m_viewArea) {
+    m_viewArea->openDroppedFiles(p_paths);
+  }
 }
 
 void MainWindow2::restoreWindowGeometry() {

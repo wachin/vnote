@@ -58,6 +58,9 @@ public:
 
   void kickOffPostInit(const QStringList &p_pathsToOpen);
 
+  // Open external files (via IPC, macOS FileOpen, or CLI args).
+  void openExternalFiles(const QStringList &p_paths);
+
   void setupNavigationMode();
 
   // Content area expansion.
